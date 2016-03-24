@@ -408,18 +408,18 @@ namespace AhriBuddy
             {
                 var target = TargetSelector.GetTarget(EFlash.Range + 100, DamageType.Magical);
                 //var target = TargetSelector.SelectedTarget;
-                if (target.IsValidTarget() && target.IsInvulnerable)
+                if (target.IsValidTarget() && !target.IsInvulnerable)
                 {
                     var pre = EFlash.GetPrediction(target);
                     var postion = EloBuddy.Player.Instance.ServerPosition.Extend(target.ServerPosition, Flash.Range);
-                    int Delay = E.CastDelay + Game.Ping + 35;
+                    int Delay = E.CastDelay + Game.Ping - 60;
 
                     if (E.IsReady() && pre.HitChance >= HitChance.High)
                         if (EFlash.Cast(pre.CastPosition))
                             Core.DelayAction(delegate ()
                             {
                                 Flash.Cast(postion.To3DWorld());
-                            }, new Random(DateTime.Now.Millisecond * (int)(Game.CursorPos.X + Player.Position.Y)).Next(Delay, Delay + 35));
+                            }, new Random(DateTime.Now.Millisecond * (int)(Game.CursorPos.X + Player.Position.Y)).Next(Delay, Delay + 30));
                 }
             }
         }

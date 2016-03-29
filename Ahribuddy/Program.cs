@@ -273,7 +273,7 @@ namespace AhriBuddy
 
                 if (GetValue(LaneClearM, "LaneClear W"))
                 {
-                    var Minion = EntityManager.MinionsAndMonsters.EnemyMinions.FirstOrDefault(x => x.IsValidTarget(550) && x.Health < eDamageCalc(x));
+                    var Minion = EntityManager.MinionsAndMonsters.EnemyMinions.FirstOrDefault(x => x.IsValidTarget(550) && x.Health < wDamageCalc(x));
                     if (Minion.IsValidTarget())
                     {
                         var pre = W.GetPrediction(Minion);

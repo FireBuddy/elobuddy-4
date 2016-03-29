@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
@@ -166,19 +165,25 @@ namespace AhriBuddy
             if (GetKeyBind(AutoHarassM, "Auto Harass Key"))
                 AutoHarass();
 
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass)) Harass();
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear)) JCLear();
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo)) Combo();
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
+                Flee();
+
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
+                Harass();
+
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear))
+                JCLear();
+
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
+                Clear();
+
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+                Combo();
         }
 
         private static void Game_OnTick(EventArgs args)
         {
-            if (Player.IsDead) return;
-
             Skin();
-
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee)) Flee();
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear)) Clear();
         }
 
         private static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender, Interrupter.InterruptableSpellEventArgs args)
@@ -225,33 +230,33 @@ namespace AhriBuddy
 
         private static void Harass()
         {
-            if (GetValue(HarassM, "Harass E"))
-                CastE();
-
             if (GetValue(HarassM, "Harass Q"))
                 CastQ();
 
             if (GetValue(HarassM, "Harass W"))
                 CastW();
+
+            if (GetValue(HarassM, "Harass E"))
+                CastE();
         }
 
         private static void AutoHarass()
         {
-            if (GetValue(AutoHarassM, "Auto Harass E"))
-                CastE();
-
             if (GetValue(AutoHarassM, "Auto Harass Q"))
                 CastQ();
 
             if (GetValue(AutoHarassM, "Auto Harass W"))
                 CastW();
+
+            if (GetValue(AutoHarassM, "Auto Harass E"))
+                CastE();
         }
 
         private static void Clear()
         {
             if (GetKeyBind(LaneClearM, "LaneClearKey"))
             {
-                var Minions = EntityManager.MinionsAndMonsters.Get(EntityManager.MinionsAndMonsters.EntityType.Minion, EntityManager.UnitTeam.Enemy, Player.Position, Player.GetAutoAttackRange());
+                var Minions = EntityManager.MinionsAndMonsters.Get(EntityManager.MinionsAndMonsters.EntityType.Minion, EntityManager.UnitTeam.Enemy, Player.ServerPosition, E.Range);
                 if (Minions.Count() == 0) return;
 
                 if (GetValue(LaneClearM, "LaneClear Q") && Q.IsReady())
@@ -266,14 +271,22 @@ namespace AhriBuddy
                         Q.Cast(farmLocation.CastPosition);
                 }
 
+                if (GetValue(LaneClearM, "LaneClear W"))
+                {
+                    var Minion = EntityManager.MinionsAndMonsters.EnemyMinions.FirstOrDefault(x => x.IsValidTarget(E.Range) && x.Health < eDamageCalc(x));
+                }
+                    EloBuddy.Player.CastSpell(SpellSlot.W);
+
                 if (GetValue(LaneClearM, "LaneClear E"))
                 {
                     var Minion = EntityManager.MinionsAndMonsters.EnemyMinions.FirstOrDefault(x => x.IsValidTarget(E.Range) && x.Health < eDamageCalc(x));
-                    if (Minion != null)
-                        E.Cast(Minion.Position);
+                    if (Minion.IsValidTarget())
+                    {
+                        var pre = E.GetPrediction(Minion);
+                        if (pre.HitChance >= HitChance.Low)
+                            E.Cast(Minion.Position);
+                    }
                 }
-                if (GetValue(LaneClearM, "LaneClear W"))
-                    EloBuddy.Player.CastSpell(SpellSlot.W);
             }
         }
 
@@ -303,8 +316,12 @@ namespace AhriBuddy
                 if (GetValue(JungleClearM, "JungleClear E"))
                 {
                     var Mob = EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.ServerPosition, E.Range, true).FirstOrDefault(x => x.IsValidTarget() && x.Health < eDamageCalc(x));
-                    if (Mob != null)
-                        E.Cast(Mob.Position);
+                    if (Mob.IsValidTarget())
+                    {
+                        var pre = E.GetPrediction(Mob);
+                        if (pre.HitChance >= HitChance.Low)
+                            E.Cast(Mob.Position);
+                    }
                 }
             }
         }
@@ -326,7 +343,7 @@ namespace AhriBuddy
 
             if (GetCombobox(ComboM, "Combo Mode") == 1)
             {
-                if (GetValue(ComboM, "Combo Q") && GetValue(ComboM, "Combo E"))
+                if (GetValue(ComboM, "Combo Q") || GetValue(ComboM, "Combo E"))
                     CastEQ();
 
                 if (GetValue(ComboM, "Combo W"))
@@ -528,6 +545,11 @@ namespace AhriBuddy
 
             var t = (float)(-b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
             return distance / t;
+        }
+
+        static float wDamageCalc(Obj_AI_Minion target)
+        {
+
         }
 
         static float eDamageCalc(Obj_AI_Minion target)

@@ -273,9 +273,14 @@ namespace AhriBuddy
 
                 if (GetValue(LaneClearM, "LaneClear W"))
                 {
-                    var Minion = EntityManager.MinionsAndMonsters.EnemyMinions.FirstOrDefault(x => x.IsValidTarget(E.Range) && x.Health < eDamageCalc(x));
+                    var Minion = EntityManager.MinionsAndMonsters.EnemyMinions.FirstOrDefault(x => x.IsValidTarget(550) && x.Health < eDamageCalc(x));
+                    if (Minion.IsValidTarget())
+                    {
+                        var pre = W.GetPrediction(Minion);
+                        if (pre.HitChance >= HitChance.Low)
+                            EloBuddy.Player.CastSpell(SpellSlot.W);
+                    }
                 }
-                    EloBuddy.Player.CastSpell(SpellSlot.W);
 
                 if (GetValue(LaneClearM, "LaneClear E"))
                 {
@@ -546,12 +551,12 @@ namespace AhriBuddy
             var t = (float)(-b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
             return distance / t;
         }
-
+        
         static float wDamageCalc(Obj_AI_Minion target)
         {
-
+            return 1.6f *    Player.CalculateDamageOnUnit(target, DamageType.Magical, 25f * W.Level + 15 + 0.4f * Player.TotalMagicalDamage);
         }
-
+        
         static float eDamageCalc(Obj_AI_Minion target)
         {
             return Player.CalculateDamageOnUnit(target, DamageType.Magical, 35f * E.Level + 25 + 0.5f * Player.TotalMagicalDamage);

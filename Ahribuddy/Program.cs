@@ -244,14 +244,12 @@ namespace AhriBuddy
 
         private static void AutoHarass()
         {
-            if (GetValue(AutoHarassM, "Auto Harass Q"))
-                CastQ();
+            CastQ();
+
+            CastE();
 
             if (GetValue(AutoHarassM, "Auto Harass W"))
                 CastW();
-
-            if (GetValue(AutoHarassM, "Auto Harass E"))
-                CastE();
         }
 
         private static void Clear()
@@ -351,7 +349,7 @@ namespace AhriBuddy
 
             if (GetCombobox(ComboM, "Combo Mode") == 1)
             {
-                if (GetValue(ComboM, "Combo Q") || GetValue(ComboM, "Combo E"))
+                if (GetValue(ComboM, "Combo Q") && GetValue(ComboM, "Combo E"))
                     CastEQ();
 
                 if (GetValue(ComboM, "Combo W"))
@@ -366,45 +364,73 @@ namespace AhriBuddy
 
         private static void CastQ()
         {
-            var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
-            if (target.IsValidTarget())
+            if (Q.IsReady())
             {
-                var prediction = Q.GetPrediction(target);
-                if (prediction.HitChance >= HitChance.High)
+                var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
+                if (target.IsValidTarget())
                 {
-                    var Speed = GetDynamicQSpeed(ObjectManager.Player.Distance(prediction.CastPosition));
-                    if (Speed > 0f)
-                        Q.Cast(prediction.CastPosition);
+                    var Prediction = Q.GetPrediction(target);
+                    if (Prediction.HitChance >= HitChance.High)
+                    {
+                        var Speed = GetDynamicQSpeed(ObjectManager.Player.Distance(Prediction.CastPosition));
+                        if (Speed > 0f)
+                        {
+                            Q.Cast(Prediction.CastPosition);
+                            if (GetValue(AutoHarassM, "Auto Harass Q"))
+                            {
+                                if (target.CanMove && Player.Distance(target) < Q.Range * 0.9)
+                                    Q.Cast(Prediction.CastPosition);
+                                if (!target.CanMove)
+                                    Q.Cast(target);
+                            }
+                        }
+                    }
                 }
             }
         }
 
         private static void CastW()
         {
-            var target = TargetSelector.GetTarget(W.Range, DamageType.Magical);
-            if (target.IsValidTarget())
+            if (W.IsReady())
             {
-                var pred = W.GetPrediction(target);
-                if (Dash.IsDashing(Player) && GetRCount() > 0 && pred.HitChance > HitChance.Low)
-                    EloBuddy.Player.CastSpell(SpellSlot.W);
+                var target = TargetSelector.GetTarget(W.Range, DamageType.Magical);
+                if (target.IsValidTarget())
+                {
+                    var pred = W.GetPrediction(target);
+                    if (Dash.IsDashing(Player) && GetRCount() > 0 && pred.HitChance > HitChance.Low)
+                        EloBuddy.Player.CastSpell(SpellSlot.W);
 
-                if (!Player.IsDashing() && Player.Distance(target) < 550 && pred.HitChance >= HitChance.Low)
-                    EloBuddy.Player.CastSpell(SpellSlot.W);
+                    if (!Player.IsDashing() && Player.Distance(target) < 550 && pred.HitChance >= HitChance.Low)
+                        EloBuddy.Player.CastSpell(SpellSlot.W);
+                }
             }
         }
 
         private static void CastE()
         {
-            var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
-            if (target.IsValidTarget() && !target.IsInvulnerable)
+            if (E.IsReady())
             {
-                var predition = E.GetPrediction(target);
+                var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
+                if (target.IsValidTarget() && !target.IsInvulnerable)
+                {
+                    var Prediction = E.GetPrediction(target);
 
-                if (predition.HitChance >= HitChance.High && !Dash.IsDashing(target))
-                    E.Cast(predition.CastPosition);
+                    if (Prediction.HitChance >= HitChance.High && !Dash.IsDashing(target))
+                    {
+                        E.Cast(Prediction.CastPosition);
+                        if (GetValue(AutoHarassM, "Auto Harass E"))
+                        {
+                            if (target.CanMove && Player.Distance(target) < E.Range * 0.9)
+                                E.Cast(Prediction.CastPosition);
+
+                            if (!target.CanMove)
+                                E.Cast(target);
+                        }
+                    }
+                }
             }
         }
-        
+
         private static void CastEQ()
         {
             if (E.IsReady() && Q.IsReady())
@@ -418,14 +444,10 @@ namespace AhriBuddy
                             Q.Cast(target);
                 }
             }
-
-            if (!E.IsReady() || !Q.IsReady())
-            {
-                CastQ();
-                CastE();
-            }
+            CastQ();
+            CastE();
         }
-    
+
         private static void CastEFlash()
         {
             EloBuddy.Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
@@ -451,10 +473,9 @@ namespace AhriBuddy
 
         private static void CastR()
         {
-            // Player.CalculateDamageOnUnit(target, DamageType.Magical, damage);
             if (R.IsReady())
             {
-                var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
+                var target = TargetSelector.GetTarget(800, DamageType.Magical);
                 if (target.IsValidTarget())
                 {
                     float totaldamage = GetComboDamage(target) * 0.9f;
@@ -554,12 +575,12 @@ namespace AhriBuddy
             var t = (float)(-b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
             return distance / t;
         }
-        
+
         static float wDamageCalc(Obj_AI_Minion target)
         {
-            return 1.6f *    Player.CalculateDamageOnUnit(target, DamageType.Magical, 25f * W.Level + 15 + 0.4f * Player.TotalMagicalDamage);
+            return 1.6f * Player.CalculateDamageOnUnit(target, DamageType.Magical, 25f * W.Level + 15 + 0.4f * Player.TotalMagicalDamage);
         }
-        
+
         static float eDamageCalc(Obj_AI_Minion target)
         {
             return Player.CalculateDamageOnUnit(target, DamageType.Magical, 35f * E.Level + 25 + 0.5f * Player.TotalMagicalDamage);

@@ -183,6 +183,8 @@ namespace AhriBuddy
 
         private static void Game_OnTick(EventArgs args)
         {
+            if (Player.IsDead) return;
+
             Skin();
         }
 
@@ -274,12 +276,13 @@ namespace AhriBuddy
                 if (GetValue(LaneClearM, "LaneClear W"))
                 {
                     var Minion = EntityManager.MinionsAndMonsters.EnemyMinions.FirstOrDefault(x => x.IsValidTarget(550) && x.Health < wDamageCalc(x));
-                    if (Minion.IsValidTarget())
+                    if (Minion != null)
                     {
                         var pre = W.GetPrediction(Minion);
                         if (pre.HitChance >= HitChance.Low)
                             EloBuddy.Player.CastSpell(SpellSlot.W);
                     }
+                    EloBuddy.Player.CastSpell(SpellSlot.W);
                 }
 
                 if (GetValue(LaneClearM, "LaneClear E"))
@@ -321,7 +324,7 @@ namespace AhriBuddy
                 if (GetValue(JungleClearM, "JungleClear E"))
                 {
                     var Mob = EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.ServerPosition, E.Range, true).FirstOrDefault(x => x.IsValidTarget() && x.Health < eDamageCalc(x));
-                    if (Mob.IsValidTarget())
+                    if (Mob != null)
                     {
                         var pre = E.GetPrediction(Mob);
                         if (pre.HitChance >= HitChance.Low)

@@ -104,13 +104,13 @@ namespace AhriBuddy
             AutoHarassM.Add("Auto Harass Q", new CheckBox("Use Q", true));
             AutoHarassM.Add("Auto Harass W", new CheckBox("Use W", false));
             AutoHarassM.Add("Auto Harass E", new CheckBox("Use E", false));
-            AutoHarassM.Add("Auto Harass Key", new KeyBind("Auto Harass Toggle Key", true, KeyBind.BindTypes.PressToggle, 'H'));
+            AutoHarassM.Add("Auto Harass Key", new KeyBind("Auto Harass Toggle Key", false, KeyBind.BindTypes.PressToggle, 'H'));
 
             LaneClearM = Menu.AddSubMenu("LaneClear", "LaneClear");
             LaneClearM.Add("LaneClear Q", new CheckBox("Use Q", true));
             LaneClearM.Add("LaneClear W", new CheckBox("Use W", false));
             LaneClearM.Add("LaneClear E", new CheckBox("Use E", false));
-            LaneClearM.Add("LaneClearKey", new KeyBind("Lane Clear Toggle Key", true, KeyBind.BindTypes.PressToggle, 'L'));
+            LaneClearM.Add("LaneClearKey", new KeyBind("Lane Clear Toggle Key", false, KeyBind.BindTypes.PressToggle, 'L'));
 
             JungleClearM = Menu.AddSubMenu("JungleClear", "JungleClear");
             JungleClearM.Add("JungleClear Q", new CheckBox("Use Q", true));
